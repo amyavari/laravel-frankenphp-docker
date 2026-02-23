@@ -1,0 +1,3 @@
+<domain_name.com> {
+    reverse_proxy <app_service_name>_app:80
+}

@@ -1,0 +1,146 @@
+x-image: &app-image ${IMAGE}
+x-environment: &environment
+  APP_KEY_FILE: /run/secrets/app_key
+  DB_HOST: db
+  DB_USERNAME: db-user
+  DB_DATABASE: db-name
+  DB_PASSWORD_FILE: /run/secrets/db_pass
+x-secrets: &secrets
+  - app_key
+  - db_pass
+
+services:
+  app:
+    image: *app-image
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    env_file:
+      - .env
+    environment:
+      <<: *environment
+      SERVER_NAME: :80
+    # entrypoint: php artisan octane:frankenphp --max-requests=1 # Only if you use Laravel Octane
+    volumes:
+      - storage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+    networks:
+      - net
+      - web
+    secrets: *secrets
+
+  migrate:
+    image: *app-image
+    env_file:
+      - .env
+    environment: *environment
+    command: php artisan migrate --force
+    healthcheck:
+      disable: true
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - net
+    secrets: *secrets
+
+  queue:
+    image: *app-image
+    env_file:
+      - .env
+    environment: *environment
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90 --max-jobs=0 --max-time=0 --queue=high,default
+    volumes:
+      - storage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan about >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+    networks:
+      - net
+    secrets: *secrets
+
+  scheduler:
+    image: *app-image
+    env_file:
+      - .env
+    environment: *environment
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    volumes:
+      - storage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan about >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+    networks:
+      - net
+    secrets: *secrets
+
+  db:
+    image: postgres:18.2-trixie
+    environment:
+      POSTGRES_USER: db-user
+      POSTGRES_DB: db-name
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 0
+    networks:
+      - net
+    secrets:
+      - db_pass
+
+secrets:
+  app_key:
+    external: true
+  db_pass:
+    external: true
+
+volumes:
+  storage:
+  postgres_data:
+
+networks:
+  net:
+  web:
+    external: true
