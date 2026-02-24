@@ -11,6 +11,7 @@ This repository provides a template for containerizing a Laravel application for
 - Caddy (reverse proxy)
 - GitHub Actions (CI: automated testing on pull requests and merges to `main`)
 - GitHub Actions (CD: image build and deployment via Docker Swarm on merge to `main`)
+- GitHub Actions (auto-remove old images from the server and GHCR on merge to `main`)
 - Redis (optional)
 - Laravel Octane (optional)
 
@@ -57,7 +58,7 @@ docker swarm init
 
 4. Create a directory for your project on the server under `/var/www`.
 5. Update `cd /var/www/<app_directory>` in `.github/workflows/ci-cd.yml` to match your path.
-6. Update `<app_service_name>` in the final line of `.github/workflows/ci-cd.yml` to your desired app service name.
+6. Update `<app_service_name>` in the `docker stack deploy -c compose.prod.yml <app_service_name> --with-registry-auth -d` command in `.github/workflows/ci-cd.yml` to your desired app service name.
 
 ### Environment Variable Configuration
 
