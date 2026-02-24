@@ -1,0 +1,30 @@
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    networks:
+      - web
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./conf:/etc/caddy
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  web:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:
