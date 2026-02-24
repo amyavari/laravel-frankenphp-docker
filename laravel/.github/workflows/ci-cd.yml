@@ -68,8 +68,25 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            docker image prune -af
+
             cd /var/www/<app_directory>
 
             export IMAGE=${{ env.IMAGE }}:${{ needs.build.outputs.tag }}
 
             docker stack deploy -c compose.prod.yml <app_service_name> --with-registry-auth -d
+
+  cleanup:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+
+    steps:
+      - name: Delete old container images from GHCR (keep 5)
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.event.repository.name }}
+          package-type: container
+          min-versions-to-keep: 5
