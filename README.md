@@ -8,11 +8,11 @@ This repository provides a template for containerizing a Laravel application for
 - FrankenPHP (base image)
 - Livewire
 - PostgreSQL
+- Caddy (reverse proxy)
 - GitHub Actions (CI: automated testing on pull requests and merges to `main`)
 - GitHub Actions (CD: image build and deployment via Docker Swarm on merge to `main`)
 - Redis (optional)
 - Laravel Octane (optional)
-- Caddy (reverse proxy, optional)
 
 **Note:** It is recommended to use strict image tags in production to ensure every deployment uses the exact same images. Therefore, for new projects, change all image tags to the latest stable strict version. See: [Docker Hub](https://hub.docker.com/)
 
@@ -31,6 +31,8 @@ To run:
 ```bash
 docker compose up -f compose.dev.yml
 ```
+
+Your application is available on `localhost:8000`
 
 To stop:
 
@@ -95,55 +97,15 @@ file_env "APP_KEY"
 cat /proc/1/environ | tr '\0' '\n'
 ```
 
+Place updated `compose.prod.yml` file in the application directory on the server.
+
 ### Domain and Access Configuration
 
-For production, you have two choices:
-
-1. Single application on a server
-2. Multiple applications on a single server
-
-#### Single Application on a Server
-
-In this scenario, a reverse proxy is not required.
-
-Edit `compose.prod.yml`:
-
-1. Remove the `web` network from the `app` service and from the `networks` section.
-2. Remove `SERVER_NAME: :80` from the `app` service environment.
-3. Expose ports `80` and `443`.
-
-Your `app` service and `networks` should look like this:
-
-```yml
-services:
-  app:
-    image: *app-image
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    env_file:
-      - .env
-    environment: *environment
-    volumes:
-      - storage:/app/storage
-    # All other configurations remain unchanged.
-
-networks:
-  net:
-```
-
-Put this `compose.prod.yml` file in the server directory.
-
-**The application is now ready to be pushed to GitHub and will become accessible after deployment completes.**
-
-### Multiple Applications on a Single Server
-
-In this scenario, Caddy is used as a reverse proxy.
+Caddy is used as the reverse proxy and handles SSL.
 
 Edit `reverse-proxy/conf/Caddyfile`:
 
-1. Duplicate the existing configuration block for each additional application.
+1. If required, duplicate the existing configuration block for each additional application.
 2. Update the `<>` placeholders.
 
 Create a directory on the server under `/var/www/`.
@@ -163,6 +125,25 @@ cd /var/www/<revers_proxy_directory>
 docker stack deploy -c compose.prod.yml proxy -d
 ```
 
-Place the updated `compose.prod.yml` file from [Environment Variable Configuration](#environment-variable-configuration) in the application directory on the server.
-
 **The application is now ready to be pushed to GitHub and will become accessible after deployment completes.**
+
+# Other Stack
+
+## Laravel Octane
+
+First, install [Laravel Octane](https://laravel.com/docs/12.x/octane) in your project:
+
+```bash
+composer require laravel/octane
+
+php artisan octane:install --server=frankenphp
+```
+
+Then, add the following to the `app` service in your `compose.prod.yml`:
+
+```yml
+services:
+  app:
+    # All other configurations remain unchanged.
+    command: php artisan octane:frankenphp --host=0.0.0.0 --port=80
+```

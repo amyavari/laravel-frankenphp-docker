@@ -132,7 +132,7 @@ RUN chmod +x entrypoint.sh wait-for-it.sh
 COPY --from=vendor /app .
 COPY --from=frontend /app/public/build ./public/build
 
-RUN chown -R ${USER}:${USER} /app/storage /app/bootstrap/cache
+RUN chown -R ${USER}:${USER} /app
 
 USER ${USER}
 

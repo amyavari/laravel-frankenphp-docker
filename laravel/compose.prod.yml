@@ -12,16 +12,11 @@ x-secrets: &secrets
 services:
   app:
     image: *app-image
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
     env_file:
       - .env
     environment:
       <<: *environment
       SERVER_NAME: :80
-    # entrypoint: php artisan octane:frankenphp --max-requests=1 # Only if you use Laravel Octane
     volumes:
       - storage:/app/storage
     healthcheck:
