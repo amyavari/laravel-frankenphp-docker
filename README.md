@@ -151,7 +151,7 @@ caddy:
 
 3. Deploy on the Server
    - Create a directory on the server under `/var/www/`.
-   - Copy all files and directories from `reverse-proxy` into this directory.
+   - Copy all files and directories from `./reverse-proxy` into this directory.
    - Create a shared overlay network in the Swarm:
 
    ```bash
@@ -244,7 +244,7 @@ services:
 - Update the `volumes` value with the name you chose in step 2.
 - Update Redis image version.
 
-4. Uncomment this section in `.docker/scripts/entrypoint.sh` (remove `#` from the lines):
+Then, uncomment this section in `.docker/scripts/entrypoint.sh` (remove `#` from the lines):
 
 ```bash
 # log "Waiting for Redis..."
@@ -252,7 +252,7 @@ services:
 # log "Redis is ready"
 ```
 
-Now you can configure cache, queue, and other drivers to use Redis in your `.env` file:
+Now, you can configure cache, queue, and other drivers to use Redis in your `.env` file:
 
 ```env
 CACHE_STORE=redis
