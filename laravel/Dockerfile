@@ -33,7 +33,8 @@ RUN install-php-extensions \
     opcache \
     pdo_sqlite \
     pdo_pgsql \
-    sockets
+    sockets \
+    redis
 
 # Only if we have tests on images and fake images on Laravel (Mix these to above layers)
 # RUN apt-get update && apt-get install -y \
@@ -41,9 +42,6 @@ RUN install-php-extensions \
 #     && rm -rf /var/lib/apt/lists/*
 #
 # RUN install-php-extensions gd
-
-# If you have Redis
-# RUN pecl install redis-${REDIS_VER} && docker-php-ext-enable redis
 
 # Dev Builder
 FROM base AS dev-builder

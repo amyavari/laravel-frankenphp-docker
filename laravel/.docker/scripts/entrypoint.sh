@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+log() {
+  printf "\n[entrypoint] %s\n" "$1"
+}
+
 file_env() {
 	local var="$1"
 	local fileVar="${var}_FILE"
 	local def="${2:-}"
 
 	if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
-		echo "Both $var and $fileVar are set (but are exclusive)"
+		log "Both $var and $fileVar are set (but are exclusive)"
 	fi
 
 	local val="$def"
@@ -26,17 +30,21 @@ optimize_laravel() {
   php artisan optimize
 }
 
-echo "Setting environments..."
+log "Setting environment variables from secret files..."
 file_env "APP_KEY"
 file_env "DB_PASSWORD"
-echo "Environments have been set."
+log "Environment variables loaded"
 
-echo "Waiting for database..."
+log "Waiting for database..."
 ./wait-for-it.sh "${DB_HOST:-db}:${DB_PORT:-5432}" --timeout=60 --strict
-echo "Database is up."
+log "Database is ready"
 
-echo "Running Laravel optimize..."
+# log "Waiting for Redis..."
+# ./wait-for-it.sh "${REDIS_HOST:-redis}:${REDIS_PORT:-6379}" --timeout=60 --strict
+# log "Redis is ready"
+
+log "Running Laravel optimize..."
 optimize_laravel
-echo "Laravel optimize has been run..."
+log "Laravel optimization completed"
 
 exec "$@"
