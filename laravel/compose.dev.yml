@@ -6,7 +6,7 @@ services:
     image: <image_name>:dev
     container_name: <image_name>-dev
     ports:
-      - "8000:8000"
+      - "8000:80"
       - "5173:5173" # Vite development server port for Livewire hot reload
     volumes:
       - .:/app
