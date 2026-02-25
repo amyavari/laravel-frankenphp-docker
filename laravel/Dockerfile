@@ -12,54 +12,55 @@ FROM php AS base
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     zip \
     unzip \
-    libonig-dev \
-    libxml2-dev \
     libzip-dev \
     libicu-dev \
     libpq-dev \
     libsqlite3-dev \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 RUN install-php-extensions \
-    mbstring \
-    pcntl \
     bcmath \
-    zip \
+    ctype \
+    exif \
+    fileinfo \
     intl \
+    mbstring \
     opcache \
-    pdo_sqlite \
+    pcntl \
     pdo_pgsql \
+    pdo_sqlite \
+    redis \
     sockets \
     redis
 
-# Only if we have tests on images and fake images on Laravel (Mix these to above layers)
-# RUN apt-get update && apt-get install -y \
-#     libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev \
-#     && rm -rf /var/lib/apt/lists/*
-#
-# RUN install-php-extensions gd
-
 # Dev Builder
 FROM base AS dev-builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libwebp-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN install-php-extensions \
+    gd \
+    pcov
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 COPY --from=node /usr/local /usr/local
 
-RUN pecl install pcov \
-    && docker-php-ext-enable pcov
-
-# Dev
+# Development
 FROM dev-builder AS dev
 
 ENV APP_ENV=local
 ENV APP_DEBUG=true
 
-CMD ["sh", "-c", "npm run dev -- --host & exec frankenphp run --watch"]
+CMD ["sh", "-c", "npm run dev -- --host & exec frankenphp php-server --root=/app/public"]
 
 # Test
 FROM dev-builder AS test
@@ -74,9 +75,6 @@ ENV MAIL_MAILER=log
 
 COPY . .
 
-RUN mkdir -p database \
-    && touch database/database.sqlite
-
 RUN composer install --no-interaction --prefer-dist
 
 RUN cp .env.example .env \
@@ -84,6 +82,9 @@ RUN cp .env.example .env \
 
 RUN npm ci \
     && npm run build
+
+RUN mkdir -p database \
+    && touch database/database.sqlite
 
 RUN php artisan migrate --force
 
@@ -130,7 +131,7 @@ RUN chmod +x entrypoint.sh wait-for-it.sh
 COPY --from=vendor /app .
 COPY --from=frontend /app/public/build ./public/build
 
-RUN chown -R ${USER}:${USER} /app
+RUN chown -R ${USER}:${USER} .
 
 USER ${USER}
 

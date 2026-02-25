@@ -30,7 +30,7 @@ Update the `<>` placeholders in `compose.dev.yml`.
 To run:
 
 ```bash
-docker compose up -f compose.dev.yml
+docker compose -f compose.dev.yml up
 ```
 
 Your application is available on `localhost:8000`
@@ -38,7 +38,7 @@ Your application is available on `localhost:8000`
 To stop:
 
 ```bash
-docker compose down -f compose.dev.yml
+docker compose -f compose.dev.yml down
 ```
 
 ## Continuous Integration (CI)
