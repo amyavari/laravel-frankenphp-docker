@@ -148,3 +148,73 @@ services:
     # All other configurations remain unchanged.
     command: php artisan octane:frankenphp --host=0.0.0.0 --port=80
 ```
+
+## Redis
+
+First, add Redis to `compose.prod.yml`.
+
+1. Add `REDIS_HOST: redis` (or any desired service name) to the `x-environment` section. Final code:
+
+```yml
+x-environment: &environment
+  APP_KEY_FILE: /run/secrets/app_key
+  DB_HOST: db
+  DB_USERNAME: ipg-db-user
+  DB_DATABASE: ipg-db
+  DB_PASSWORD_FILE: /run/secrets/db_pass
+  REDIS_HOST: redis
+```
+
+2. Add `redis_data` (or any desired volume name) to the `volumes` section. Final code:
+
+```yml
+volumes:
+  storage:
+  postgres_data:
+  redis_data:
+```
+
+3. Add the `redis` service (or the name you chose in step 1).
+
+**Note:** Update the `volumes` value with the name you chose in step 2.
+
+```yml
+services:
+  # Existing services
+
+  redis:
+    image: redis:8.6.1-trixie
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+    networks:
+      - net
+```
+
+4. Uncomment this section in `.docker/scripts/entrypoint.sh` (remove `#` from the lines):
+
+```bash
+# log "Waiting for Redis..."
+# ./wait-for-it.sh "${REDIS_HOST:-redis}:${REDIS_PORT:-6379}" --timeout=60 --strict
+# log "Redis is ready"
+```
+
+Now you can configure cache, queue, and other drivers to use Redis in your `.env` file:
+
+```env
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+BROADCAST_CONNECTION=redis
+```
