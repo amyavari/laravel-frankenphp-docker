@@ -15,11 +15,45 @@ This repository provides a template for containerizing a Laravel application for
 - Redis (optional)
 - Laravel Octane (optional)
 
-**Note:** It is recommended to use strict image tags in production to ensure every deployment uses the exact same images. Therefore, for new projects, change all image tags to the latest stable strict version. See: [Docker Hub](https://hub.docker.com/)
+# Table of Contents
+
+- [Usage and Customization Guide](#usage-and-customization-guide)
+  - [Update Base Images](#update-base-images)
+  - [Local Development](#local-development)
+  - [Continuous Integration (CI)](#continuous-integration-ci)
+  - [Production Deployment](#production-deployment)
+    - [Environment Variable Configuration](#environment-variable-configuration)
+    - [Domain and Access Configuration](#domain-and-access-configuration)
+
+- [Other Stack](#other-stack)
+  - [Laravel Octane](#laravel-octane)
+  - [Redis](#redis)
 
 # Usage and Customization Guide
 
 Copy all files and directories from the `./laravel` directory into the root of your Laravel project.
+
+## Update Base Images
+
+First, update all Docker base images. The files you should modify:
+
+- `Dockerfile`
+
+```Dockerfile
+ARG PHP_VER=8.5.2
+ARG FRANKENPHP_VER=1.11.1
+ARG COMPOSER_VER=2.9.5
+ARG NODE_VER=25.6.1
+```
+
+- `compose.prod.yml` (PostgreSQL version):
+
+```yml
+db:
+  image: postgres:18.2-trixie
+```
+
+**Note:** It is recommended to use strict image tags (`MAJOR.MINOR.PATCH-OS`) in production to ensure every deployment uses the exact same images. Therefore, for new projects, change all image tags to the latest stable strict version. See: [Docker Hub](https://hub.docker.com/)
 
 ## Local Development
 
@@ -104,27 +138,32 @@ Place updated `compose.prod.yml` file in the application directory on the server
 
 Caddy is used as the reverse proxy and handles SSL.
 
-Edit `reverse-proxy/conf/Caddyfile`:
+1. Edit `reverse-proxy/conf/Caddyfile`:
+   - If required, duplicate the existing configuration block for each additional application.
+   - Update the `<>` placeholders.
 
-1. If required, duplicate the existing configuration block for each additional application.
-2. Update the `<>` placeholders.
+2. Update Caddy image version in `reverse-proxy/compose.prod.yml`.
 
-Create a directory on the server under `/var/www/`.
-
-Copy all files and directories from `reverse-proxy` into this directory.
-
-Next, create a shared overlay network in the Swarm:
-
-```bash
-docker network create --driver overlay --attachable web
+```yml
+caddy:
+  image: caddy:2.10.2-alpine
 ```
 
-Deploy the Caddy container:
+3. Deploy on the Server
+   - Create a directory on the server under `/var/www/`.
+   - Copy all files and directories from `reverse-proxy` into this directory.
+   - Create a shared overlay network in the Swarm:
 
-```bash
-cd /var/www/<revers_proxy_directory>
-docker stack deploy -c compose.prod.yml proxy -d
-```
+   ```bash
+   docker network create --driver overlay --attachable web
+   ```
+
+   - Deploy the Caddy container:
+
+   ```bash
+   cd /var/www/<revers_proxy_directory>
+   docker stack deploy -c compose.prod.yml proxy -d
+   ```
 
 **The application is now ready to be pushed to GitHub and will become accessible after deployment completes.**
 
@@ -176,8 +215,6 @@ volumes:
 
 3. Add the `redis` service (or the name you chose in step 1).
 
-**Note:** Update the `volumes` value with the name you chose in step 2.
-
 ```yml
 services:
   # Existing services
@@ -201,6 +238,11 @@ services:
     networks:
       - net
 ```
+
+**Notes:**
+
+- Update the `volumes` value with the name you chose in step 2.
+- Update Redis image version.
 
 4. Uncomment this section in `.docker/scripts/entrypoint.sh` (remove `#` from the lines):
 
