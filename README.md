@@ -90,9 +90,7 @@ docker swarm init
 
 3. Log in to GitHub Container Registry via Docker on your server. See: [Login via Docker to ghcr.io](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic)
 
-4. Create a directory for your project on the server under `/var/www`.
-5. Update `cd /var/www/<app_directory>` in `.github/workflows/ci-cd.yml` to match your path.
-6. Update `<app_service_name>` in the `docker stack deploy -c compose.prod.yml <app_service_name> --with-registry-auth -d` command in `.github/workflows/ci-cd.yml` to your desired app service name.
+4. Create a directory for your project on the server under `/var/www` using **the same name as your repository**.
 
 ### Environment Variable Configuration
 
@@ -140,7 +138,8 @@ Caddy is used as the reverse proxy and handles SSL.
 
 1. Edit `reverse-proxy/conf/Caddyfile`:
    - If required, duplicate the existing configuration block for each additional application.
-   - Update the `<>` placeholders.
+   - Replace `<domain_name.com>` with your actual domain or subdomain.
+   - Replace `<app_service_name>` with your **repository name**.
 
 2. Update Caddy image version in `reverse-proxy/compose.prod.yml`.
 
