@@ -7,7 +7,7 @@ This repository provides a template for containerizing a Laravel application for
 - Docker Swarm
 - FrankenPHP (base image)
 - Livewire
-- PostgreSQL
+- PostgreSQL (default) or MySQL
 - Caddy (reverse proxy)
 - GitHub Actions (CI: automated testing on pull requests and merges to `main`)
 - GitHub Actions (CD: image build and deployment via Docker Swarm on merge to `main`)
@@ -29,6 +29,7 @@ This repository provides a template for containerizing a Laravel application for
 - [Other Stack](#other-stack)
   - [Laravel Octane](#laravel-octane)
   - [Redis](#redis)
+  - [MySQL](#mysql)
 
 # Usage and Customization Guide
 
@@ -315,3 +316,52 @@ SESSION_DRIVER=redis
 QUEUE_CONNECTION=redis
 BROADCAST_CONNECTION=redis
 ```
+
+## MySQL
+
+If you want to use MySQL instead of PostgreSQL, update the following in `compose.prod.yml`:
+
+1. Change `DB_USERNAME` in the `x-environment` section to `root`. Final code:
+
+```yml
+x-environment: &environment
+  APP_KEY_FILE: /run/secrets/app_key
+  DB_HOST: db
+  DB_USERNAME: root
+  DB_DATABASE: db-name
+  DB_PASSWORD_FILE: /run/secrets/db_pass
+```
+
+2. Replace the existing `db` service entirely with the MySQL configuration below (copy and paste all of it):
+
+```yml
+db:
+  image: mysql:9.6.0-oracle
+  environment:
+    MYSQL_DATABASE: db-name
+    MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_pass
+  volumes:
+    - db_data:/var/lib/mysql
+  healthcheck:
+    test:
+      [
+        "CMD-SHELL",
+        "mysqladmin ping -h 127.0.0.1 --user=root --password-file=/run/secrets/db_pass --silent",
+      ]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
+  deploy:
+    replicas: 1
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 0
+  networks:
+    - net
+  secrets:
+    - db_pass
+```
+
+**Note:** Update MySQL image version.
