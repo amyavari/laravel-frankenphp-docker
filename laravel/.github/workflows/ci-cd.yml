@@ -95,6 +95,19 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Upload compose.prod.yml to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "compose.prod.yml"
+          target: "/var/www/${{ env.REPO_NAME }}/"
+
       - name: Deploy to server (Docker Swarm)
         uses: appleboy/ssh-action@v1
         with:

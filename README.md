@@ -141,8 +141,6 @@ file_env "APP_KEY"
 cat /proc/1/environ | tr '\0' '\n'
 ```
 
-Place updated `compose.prod.yml` file in the application directory on the server.
-
 ### Domain and Access Configuration
 
 Caddy is used as the reverse proxy and handles SSL.
