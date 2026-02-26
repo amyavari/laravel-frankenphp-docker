@@ -24,6 +24,7 @@ This repository provides a template for containerizing a Laravel application for
   - [Production Deployment](#production-deployment)
     - [Environment Variable Configuration](#environment-variable-configuration)
     - [Domain and Access Configuration](#domain-and-access-configuration)
+    - [Multi-Platform Support](#multi-platform-support)
 
 - [Other Stack](#other-stack)
   - [Laravel Octane](#laravel-octane)
@@ -165,6 +166,61 @@ caddy:
    ```
 
 **The application is now ready to be pushed to GitHub and will become accessible after deployment completes.**
+
+### Multi-Platform Support
+
+**Linux amd64**
+
+The current CI/CD workflow builds Docker images for `linux/amd64`.
+
+**Linux arm64**
+
+To build and test for `linux/arm64`, update the `runs-on:` value for both the `test` and `build` jobs in `.github/workflows/ci-cd.yml`:
+
+```yml
+jobs:
+  test:
+    runs-on: ubuntu-latest-arm
+    # Others remain unchanged
+
+  build:
+    runs-on: ubuntu-latest-arm
+    # Others remain unchanged
+```
+
+**Linux amd64 and arm64**
+
+To support both platforms, make the following changes in `.github/workflows/ci-cd.yml`:
+
+1. In the `build` job, add the _Set up QEMU_ step immediately after the _Checkout repository_ step:
+
+```yml
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Set up QEMU
+    uses: docker/setup-qemu-action@v3
+```
+
+2. Add `platforms: linux/amd64,linux/arm64` to the _Build and push image (with shared cache)_ step in the `build` job:
+
+```yml
+- name: Build and push image (with shared cache)
+  uses: docker/build-push-action@v6
+  with:
+    context: .
+    target: prod
+    push: true
+    tags: ${{ env.IMAGE }}:${{ steps.vars.outputs.tag }}
+    platforms: linux/amd64,linux/arm64
+    cache-from: |
+      type=registry,ref=${{ env.IMAGE }}:buildcache
+      type=gha
+    cache-to: |
+      type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
+      type=gha,mode=max
+```
 
 # Other Stack
 
