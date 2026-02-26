@@ -30,6 +30,7 @@ RUN install-php-extensions \
     mbstring \
     opcache \
     pcntl \
+    pdo_mysql \
     pdo_pgsql \
     pdo_sqlite \
     redis \
