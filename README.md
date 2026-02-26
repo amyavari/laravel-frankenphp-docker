@@ -34,6 +34,13 @@ This repository provides a template for containerizing a Laravel application for
 # Usage and Customization Guide
 
 Copy all files and directories from the `./laravel` directory into the root of your Laravel project.
+Or run the following commands from the root of your project to clone and copy them automatically:
+
+```bash
+ git clone https://github.com/amyavari/laravel-frankenphp-docker.git temp-docker-setup
+ cp -rT temp-docker-setup/laravel .
+ rm -rf temp-docker-setup
+```
 
 ## Update Base Images
 
@@ -139,6 +146,17 @@ Place updated `compose.prod.yml` file in the application directory on the server
 ### Domain and Access Configuration
 
 Caddy is used as the reverse proxy and handles SSL.
+
+Copy the `./reverse-proxy` directory to your local machine.
+Or run the following commands to clone and copy it automatically:
+
+```bash
+ git clone https://github.com/amyavari/laravel-frankenphp-docker.git temp-docker-setup
+ cp -rT temp-docker-setup/reverse-proxy ./reverse-proxy
+ rm -rf temp-docker-setup
+```
+
+**Note:** If the reverse proxy is used for multiple projects, it is recommended to maintain it in a separate repository. Otherwise, you can include it in your current project repository.
 
 1. Edit `reverse-proxy/conf/Caddyfile`:
    - If required, duplicate the existing configuration block for each additional application.
