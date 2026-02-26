@@ -73,15 +73,23 @@ ENV SESSION_DRIVER=array
 ENV QUEUE_CONNECTION=sync
 ENV MAIL_MAILER=log
 
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-interaction \
+    --prefer-dist \
+    --no-scripts
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
 COPY . .
 
-RUN composer install --no-interaction --prefer-dist
+RUN php artisan package:discover --ansi
 
 RUN cp .env.example .env \
     && php artisan key:generate --force
 
-RUN npm ci \
-    && npm run build
+RUN npm run build
 
 RUN mkdir -p database \
     && touch database/database.sqlite
@@ -95,19 +103,27 @@ FROM  composer AS vendor
 
 WORKDIR /app
 
-COPY . .
-
-RUN composer install --no-dev --no-interaction --optimize-autoloader
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
 
 # Production Frontend
 FROM node AS frontend
 
 WORKDIR /app
 
-COPY --from=vendor ./app .
+COPY package.json package-lock.json ./
+RUN npm ci
 
-RUN npm ci \
-    && npm run build
+COPY --from=vendor /app/vendor ./vendor
+
+COPY . .
+
+RUN npm run build
 
 # Production
 FROM base AS prod
@@ -128,8 +144,12 @@ COPY .docker/scripts/entrypoint.sh entrypoint.sh
 COPY .docker/scripts/wait-for-it.sh wait-for-it.sh
 RUN chmod +x entrypoint.sh wait-for-it.sh
 
-COPY --from=vendor /app .
+COPY --from=vendor /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
+
+COPY . .
+
+RUN php artisan package:discover --ansi
 
 RUN chown -R ${USER}:${USER} .
 
