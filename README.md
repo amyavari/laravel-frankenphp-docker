@@ -9,9 +9,9 @@ This repository provides a template for containerizing a Laravel application for
 - Livewire
 - PostgreSQL (default) or MySQL
 - Caddy (reverse proxy)
-- GitHub Actions (CI: automated testing on pull requests and merges to `main`)
-- GitHub Actions (CD: image build and deployment via Docker Swarm on merge to `main`)
-- GitHub Actions (auto-remove old images from the server and GHCR on merge to `main`)
+- GitHub Actions (CI: automated testing on pull requests and pushes to `main`)
+- GitHub Actions (CD: image build and deployment via Docker Swarm on push to `main`)
+- GitHub Actions (auto-remove old images from the server and GHCR on push to `main`)
 - Redis (optional)
 - Laravel Octane (optional)
 
@@ -34,6 +34,7 @@ This repository provides a template for containerizing a Laravel application for
 # Usage and Customization Guide
 
 Copy all files and directories from the `./laravel` directory into the root of your Laravel project.
+
 Or run the following commands from the root of your project to clone and copy them automatically:
 
 ```bash
@@ -49,26 +50,28 @@ First, update all Docker base images. The files you should modify:
 - `Dockerfile`
 
 ```Dockerfile
-ARG PHP_VER=8.5.2
-ARG FRANKENPHP_VER=1.11.1
-ARG COMPOSER_VER=2.9.5
-ARG NODE_VER=25.6.1
+ARG PHP_VER=<major.minor.patch>
+ARG FRANKENPHP_VER=<major.minor.patch>
+ARG COMPOSER_VER=<major.minor.patch>
+ARG NODE_VER=<major.minor.patch>
+ARG DEBIAN_CODENAME=<os>
 ```
 
 - `compose.prod.yml` (PostgreSQL version):
 
 ```yml
 db:
-  image: postgres:18.2-trixie
+  image: postgres:<major.minor-os>
 ```
 
-**Note:** It is recommended to use strict image tags (`MAJOR.MINOR.PATCH-OS`) in production to ensure every deployment uses the exact same images. Therefore, for new projects, change all image tags to the latest stable strict version. See: [Docker Hub](https://hub.docker.com/)
+**Note:**
+
+- It is recommended to use strict image tags (`MAJOR.MINOR.PATCH-OS`) in production to ensure every deployment uses the exact same images. Therefore, for new projects, change all image tags to the latest stable strict version. See: [Docker Hub](https://hub.docker.com/)
+- To reduce storage usage on your server, use the same Linux distribution (Debian codename / OS variant) across all images whenever possible.
 
 ## Local Development
 
 For local development, it uses your local `.env` file content, just like a normal local setup.
-
-Update the `<>` placeholders in `compose.dev.yml`.
 
 To run:
 
@@ -107,8 +110,7 @@ docker swarm init
 
 ```env
 APP_KEY=
-APP_ENV=
-APP_DEBUG=
+
 DB_HOST=
 DB_USERNAME=
 DB_DATABASE=
@@ -146,6 +148,7 @@ cat /proc/1/environ | tr '\0' '\n'
 Caddy is used as the reverse proxy and handles SSL.
 
 Copy the `./reverse-proxy` directory to your local machine.
+
 Or run the following commands to clone and copy it automatically:
 
 ```bash
@@ -158,14 +161,14 @@ Or run the following commands to clone and copy it automatically:
 
 1. Edit `reverse-proxy/conf/Caddyfile`:
    - If required, duplicate the existing configuration block for each additional application.
-   - Replace `<domain_name.com>` with your actual domain or subdomain.
+   - Replace `<full_domain_name>` with your actual domain or subdomain.
    - Replace `<app_service_name>` with your **repository name**.
 
 2. Update Caddy image version in `reverse-proxy/compose.prod.yml`.
 
 ```yml
 caddy:
-  image: caddy:2.10.2-alpine
+  image: caddy:<major.minor.patch-os>
 ```
 
 3. Deploy on the Server
@@ -211,34 +214,25 @@ jobs:
 
 To support both platforms, make the following changes in `.github/workflows/ci-cd.yml`:
 
-1. In the `build` job, add the _Set up QEMU_ step immediately after the _Checkout repository_ step:
+1. In the `build` job, add the **Set up QEMU** step immediately after the **Checkout repository** step:
 
 ```yml
 steps:
   - name: Checkout repository
     uses: actions/checkout@v4
 
-  - name: Set up QEMU
+  - name: Set up QEMU # Add this step
     uses: docker/setup-qemu-action@v3
 ```
 
-2. Add `platforms: linux/amd64,linux/arm64` to the _Build and push image (with shared cache)_ step in the `build` job:
+2. Add `platforms: linux/amd64,linux/arm64` to the **Build and push image (with shared cache)** step in the `build` job:
 
 ```yml
 - name: Build and push image (with shared cache)
   uses: docker/build-push-action@v6
   with:
-    context: .
-    target: prod
-    push: true
-    tags: ${{ env.IMAGE }}:${{ steps.vars.outputs.tag }}
+    # Others remain unchanged
     platforms: linux/amd64,linux/arm64
-    cache-from: |
-      type=registry,ref=${{ env.IMAGE }}:buildcache
-      type=gha
-    cache-to: |
-      type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
-      type=gha,mode=max
 ```
 
 # Other Stack
@@ -253,6 +247,8 @@ composer require laravel/octane
 php artisan octane:install --server=frankenphp
 ```
 
+**Note:** You don't need to install the FrankenPHP binary on your local machine, as everything runs inside the Docker container.
+
 Then, add the following to the `app` service in your `compose.prod.yml`:
 
 ```yml
@@ -266,24 +262,19 @@ services:
 
 First, add Redis to `compose.prod.yml`.
 
-1. Add `REDIS_HOST: redis` (or any desired service name) to the `x-environment` section. Final code:
+1. Add `REDIS_HOST: redis` (or any desired service name) to the `x-environment` section:
 
 ```yml
-x-environment: &environment
-  APP_KEY_FILE: /run/secrets/app_key
-  DB_HOST: db
-  DB_USERNAME: ipg-db-user
-  DB_DATABASE: ipg-db
-  DB_PASSWORD_FILE: /run/secrets/db_pass
+x-environment: ...
+  # Existing environment variables
   REDIS_HOST: redis
 ```
 
-2. Add `redis_data` (or any desired volume name) to the `volumes` section. Final code:
+2. Add `redis_data` (or any desired volume name) to the `volumes` section:
 
 ```yml
 volumes:
-  storage:
-  postgres_data:
+  # Existing volumes
   redis_data:
 ```
 
@@ -294,9 +285,9 @@ services:
   # Existing services
 
   redis:
-    image: redis:8.6.1-trixie
+    image: redis:<major.minor.patch-os> # Set this
     volumes:
-      - redis_data:/data
+      - redis_data:/data # Update this if is required
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping"]
       interval: 10s
@@ -315,8 +306,8 @@ services:
 
 **Notes:**
 
-- Update the `volumes` value with the name you chose in step 2.
-- Update Redis image version.
+- Set Redis image version.
+- Update the `volumes` value with the name you chose in step 2 if you used a different name than the suggested one.
 
 Then, uncomment this section in `.docker/scripts/entrypoint.sh` (remove `#` from the lines):
 
@@ -339,24 +330,22 @@ BROADCAST_CONNECTION=redis
 
 If you want to use MySQL instead of PostgreSQL, update the following in `compose.prod.yml`:
 
-1. Change `DB_USERNAME` in the `x-environment` section to `root`. Final code:
+1. Change `DB_USERNAME` in the `x-environment` section to `root`:
 
 ```yml
-x-environment: &environment
-  APP_KEY_FILE: /run/secrets/app_key
-  DB_HOST: db
+x-environment: ...
+  # Other environment variables
   DB_USERNAME: root
-  DB_DATABASE: db-name
-  DB_PASSWORD_FILE: /run/secrets/db_pass
+  # Other environment variables
 ```
 
 2. Replace the existing `db` service entirely with the MySQL configuration below (copy and paste all of it):
 
 ```yml
 db:
-  image: mysql:9.6.0-oracle
+  image: mysql:<major.minor.patch-os> # Set this
   environment:
-    MYSQL_DATABASE: db-name
+    MYSQL_DATABASE: db-name # Update this
     MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_pass
   volumes:
     - db_data:/var/lib/mysql
@@ -382,4 +371,7 @@ db:
     - db_pass
 ```
 
-**Note:** Update MySQL image version.
+**Notes:**
+
+- Set MySQL image version.
+- Update `MYSQL_DATABASE` to match the database name you defined in [Environment Variable Configuration](#environment-variable-configuration)
