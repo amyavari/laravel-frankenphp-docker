@@ -117,6 +117,8 @@ DB_PASSWORD=
 echo "<value>" | docker secret create <name_of_secret> -
 ```
 
+**Note:** If you choose different names for the secrets, make sure to replace them in all relevant parts of `compose.prod.yml` and in the code snippets in this README where they are used.
+
 If you need additional secrets for other credentials:
 
 1. Suffix the corresponding env with `_FILE` in `compose.prod.yml`.
@@ -280,7 +282,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -346,7 +348,7 @@ db:
     test:
       [
         "CMD-SHELL",
-        "mysqladmin ping -h 127.0.0.1 --user=root --password-file=/run/secrets/db_pass --silent",
+        "mysqladmin ping -h 127.0.0.1 -u root -p$$(cat /run/secrets/db_pass) --silent",
       ]
     interval: 10s
     timeout: 5s
