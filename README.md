@@ -24,6 +24,7 @@ This repository provides a template for containerizing a Laravel application for
   - [Production Deployment](#production-deployment)
     - [Environment Variable Configuration](#environment-variable-configuration)
     - [Domain and Access Configuration](#domain-and-access-configuration)
+    - [Zero-Downtime Database Migrations](#zero-downtime-database-migrations)
     - [Multi-Platform Support](#multi-platform-support)
 
 - [Other Stack](#other-stack)
@@ -188,6 +189,19 @@ caddy:
    ```
 
 **The application is now ready to be pushed to GitHub and will become accessible after deployment completes.**
+
+### Zero-Downtime Database Migrations
+
+The services in this repository are designed to leverage Docker Swarm blue/green updates to support zero-downtime deployments.
+
+However, database migrations cannot always be safely rolled back. If your migrations include breaking schema changes, consider using the [Expand and Contract pattern for schema changes](https://www.prisma.io/dataguide/types/relational/expand-and-contract-pattern).
+
+Alternatively, you can handle it manually by:
+
+1. Bring the application down.
+2. Back up the database.
+3. Deploy the new schema and application version (using the normal CI/CD pipeline of this repository).
+4. Verify stability, then bring the application back up.
 
 ### Multi-Platform Support
 
