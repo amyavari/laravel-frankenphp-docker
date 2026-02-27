@@ -2,10 +2,11 @@ ARG PHP_VER=8.5.2
 ARG FRANKENPHP_VER=1.11.1
 ARG COMPOSER_VER=2.9.5
 ARG NODE_VER=25.6.1
+ARG DEBIAN_CODENAME=trixie
 
-FROM dunglas/frankenphp:${FRANKENPHP_VER}-php${PHP_VER}-trixie AS php
+FROM dunglas/frankenphp:${FRANKENPHP_VER}-php${PHP_VER}-${DEBIAN_CODENAME} AS php
 FROM composer:${COMPOSER_VER} AS composer
-FROM node:${NODE_VER}-trixie AS node
+FROM node:${NODE_VER}-${DEBIAN_CODENAME} AS node
 
 # Base
 FROM php AS base
