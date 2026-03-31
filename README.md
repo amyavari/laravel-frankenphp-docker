@@ -1,15 +1,14 @@
 # Laravel FrankenPHP Docker Template
 
-This repository provides a template for containerizing a Laravel application for both development and production environments.
+This repository provides a template for containerizing a Laravel application for both development and production environments. It is fully compatible with full-stack frameworks like **Livewire** or **Inertia.js**.
 
 # Technology Stack
 
 - Docker Swarm
 - FrankenPHP (base image)
-- Livewire
 - PostgreSQL (default) or MySQL
 - Caddy (reverse proxy)
-- GitHub Actions (CI: automated testing on pull requests and pushes to `main`)
+- GitHub Actions (CI: automated testing on pull requests and push to `main`)
 - GitHub Actions (CD: image build and deployment via Docker Swarm on push to `main`)
 - GitHub Actions (auto-remove old images from the server and GHCR on push to `main`)
 - Redis (optional)
@@ -24,6 +23,7 @@ This repository provides a template for containerizing a Laravel application for
   - [Production Deployment](#production-deployment)
     - [Environment Variable Configuration](#environment-variable-configuration)
     - [Domain and Access Configuration](#domain-and-access-configuration)
+    - [Required GitHub Secrets](#required-github-secrets)
     - [Zero-Downtime Database Migrations](#zero-downtime-database-migrations)
     - [Multi-Platform Support](#multi-platform-support)
 
@@ -187,6 +187,15 @@ caddy:
    cd /var/www/<revers_proxy_directory>
    docker stack deploy -c compose.prod.yml proxy -d
    ```
+
+### Required GitHub Secrets
+
+To deploy the application to your server, the CI/CD workflow requires access to it. Please configure the following secrets in your [GitHub repository settings](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-a-repository):
+
+- `SERVER_HOST`: The IP address or hostname of your production server.
+- `SERVER_PORT`: The SSH port. (default is `22`).
+- `SERVER_USER`: The username with permissions to deploy and manage the application.
+- `SERVER_SSH_KEY`: The private SSH key for authentication. (Generate an `ed25519` key pair, add the public key to your server's `authorized_keys`, and paste the private key here).
 
 **The application is now ready to be pushed to GitHub and will become accessible after deployment completes.**
 
