@@ -242,17 +242,17 @@ To support both platforms, make the following changes in `.github/workflows/ci-c
 ```yml
 steps:
   - name: Checkout repository
-    uses: actions/checkout@v4
+    uses: actions/checkout@v6
 
   - name: Set up QEMU # Add this step
-    uses: docker/setup-qemu-action@v3
+    uses: docker/setup-qemu-action@v4
 ```
 
 2. Add `platforms: linux/amd64,linux/arm64` to the **Build and push image (with shared cache)** step in the `build` job:
 
 ```yml
 - name: Build and push image (with shared cache)
-  uses: docker/build-push-action@v6
+  uses: docker/build-push-action@v7
   with:
     # Others remain unchanged
     platforms: linux/amd64,linux/arm64
