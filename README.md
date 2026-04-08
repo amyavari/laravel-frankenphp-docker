@@ -398,3 +398,11 @@ db:
 
 - Set MySQL image version.
 - Update `MYSQL_DATABASE` to match the database name you defined in [Environment Variable Configuration](#environment-variable-configuration)
+
+## Contributing
+
+Thank you for considering contributing to the Laravel FrankenPHP Docker Template! The contribution guide can be found in the [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+**Laravel FrankenPHP Docker Template** was created by **[Ali Mohammad Yavari](https://www.linkedin.com/in/ali-m-yavari/)** under the **[MIT license](https://opensource.org/licenses/MIT)**.
