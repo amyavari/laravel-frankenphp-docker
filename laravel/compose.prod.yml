@@ -97,7 +97,8 @@ services:
     env_file:
       - .env
     environment: *environment
-    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"
+    stop_grace_period: 65s
     volumes:
       - storage:/app/storage
     healthcheck:
@@ -109,7 +110,7 @@ services:
     deploy:
       replicas: 1
       update_config:
-        order: start-first
+        order: stop-first
         failure_action: rollback
         monitor: 180s
       rollback_config:
