@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.1] - 2026-05-29
+
+### Fixed
+
+- Graceful stops on update for `queue` container
+- Graceful stops on update for `schedule` container
+
 ## [1.0.0] - 2026-04-06
 
 First stable release of the template, features:
@@ -23,4 +30,5 @@ Optional features:
 - **Redis integration**: Ready-to-enable caching, queues, and sessions
 - **Laravel Octane support**: High-performance setup using FrankenPHP
 
+[1.0.1]: https://github.com/amyavari/laravel-frankenphp-docker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/amyavari/laravel-frankenphp-docker/releases/tag/v1.0.0
