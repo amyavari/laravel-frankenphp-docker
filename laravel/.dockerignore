@@ -48,3 +48,24 @@ nbproject/
 *.swp
 *.swo
 *~
+
+# AI agents / assistants
+CLAUDE.md
+.claude/
+.mcp.json
+.codex/
+.opencode/
+AGENTS.md
+.agents/
+.cursor/
+.cursorrules
+.windsurf/
+.windsurfrules
+.clinerules
+.clinerules/
+.continue/
+.junie/
+.gemini/
+GEMINI.md
+.amazonq/
+.aider*
