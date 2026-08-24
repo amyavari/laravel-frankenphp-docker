@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Exclude AI agent, IDE, and Laravel storage artifacts from the Docker build context
+
 ## [1.0.1] - 2026-05-29
 
 ### Fixed
@@ -30,5 +36,6 @@ Optional features:
 - **Redis integration**: Ready-to-enable caching, queues, and sessions
 - **Laravel Octane support**: High-performance setup using FrankenPHP
 
+[Unreleased]: https://github.com/amyavari/laravel-frankenphp-docker/compare/v1.0.1...HEAD
 [1.0.1]: https://github.com/amyavari/laravel-frankenphp-docker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/amyavari/laravel-frankenphp-docker/releases/tag/v1.0.0
